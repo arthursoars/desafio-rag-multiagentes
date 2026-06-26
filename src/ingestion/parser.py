@@ -40,15 +40,14 @@ class Parser:
                 precisa_ia = (not texto_pagina) or tem_imagem
 
                 if precisa_ia:
-                    print(f"[{os.path.basename(caminho)}] Página {num_pagina}: acionando visão computacional (Qwen2-VL)...")
-                    texto_ia = self._processar_pagina_com_ollama(caminho, num_pagina)
+                    print(f"[{os.path.basename(caminho)}] Página {num_pagina}: acionando visão computacional (Qwen2.5-VL)...")
                     
-                    # Mescla o texto digital com o que a IA leu da imagem
-                    if texto_ia:
-                        texto_pagina_final = f"{texto_pagina}\n\n[TEXTO EXTRAÍDO PELA IA]\n{texto_ia}".strip() if texto_pagina else texto_ia
-                    else:
-                        texto_pagina_final = texto_pagina
+                    # Observação: o modelo de visão processa a página inteira.
+                    # Evita-se combinar a extração 'fast' para prevenir duplicação.
+                    texto_ia = self._processar_pagina_com_ollama(caminho, num_pagina)
+                    texto_pagina_final = texto_ia
                 else:
+                    # Página digital pura sem imagens: mantemos a leitura rápida
                     texto_pagina_final = texto_pagina
 
                 if texto_pagina_final:

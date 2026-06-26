@@ -37,4 +37,4 @@ for i, doc in enumerate(documentos, start=1):
     print(f"\n[{i}] {doc.nome}")
     print(f"Páginas: {doc.paginas} | Caracteres: {doc.caracteres:,}")
     print("-" * 50)
-    print(f'Resumo Inicial: \n{doc.texto[:500]}...')
+    print(f'Resumo Inicial: \n{doc.texto[:3000]}...')
