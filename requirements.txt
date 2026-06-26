@@ -1,2 +1,6 @@
-pymupdf
+unstructured[pdf]
 python-dotenv
+ollama
+pypdf
+pymupdf
+requests

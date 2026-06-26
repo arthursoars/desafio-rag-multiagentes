@@ -1,15 +1,8 @@
 services:
-  app:
-    build: .
-    volumes:
-      - ./docs:/app/docs
-    env_file:
-      - .env
-    depends_on:
-      - ollama
-
+  # Container 1: Infraestrutura de Inteligência Artificial Local
   ollama:
-    image: ollama/ollama
+    image: ollama/ollama:latest
+    container_name: rag-ollama
     ports:
       - "11434:11434"
     volumes:
@@ -19,8 +12,27 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              count: all
-              capabilities: [gpu]
+              count: 1
+              capabilities: [gpu] # Mapeia sua GPU dedicada de 4GB para o Ollama
+    networks:
+      - rag_network
+
+  # Container 2: Aplicação Python 
+  backend:
+    build: .
+    container_name: rag-backend
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - ollama
+    networks:
+      - rag_network
 
 volumes:
   ollama_data:
+
+networks:
+  rag_network:
+    driver: bridge
