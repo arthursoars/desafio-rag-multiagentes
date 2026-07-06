@@ -1,5 +1,5 @@
 services:
-  # Container 1: Infraestrutura de Inteligência Artificial Local
+  # Serviço de inferência local de IA
   ollama:
     image: ollama/ollama:latest
     container_name: rag-ollama
@@ -13,11 +13,11 @@ services:
           devices:
             - driver: nvidia
               count: 1
-              capabilities: [gpu] # Mapeia sua GPU dedicada de 4GB para o Ollama
+              capabilities: [gpu] # Usa GPU dedicada para o Ollama
     networks:
       - rag_network
 
-  # Container 2: Aplicação Python 
+  # Serviço da aplicação Python
   backend:
     build: .
     container_name: rag-backend

@@ -1,34 +1,85 @@
 import os
-from dotenv import load_dotenv
+import glob
 from src.ingestion.parser import Parser
-from src.ingestion.models import Documento
-
-load_dotenv()
+from src.processing.chunker import Chunker
+from src.processing.cleaner import AgenteLimpeza
+from src.processing.contextualizer import AgenteContexto
+from src.vectorstore.chroma_store import AgenteIndexacao
 
 class Orchestrator:
-    def __init__(self):
+    # O limite de documentos em lote (BATCH_SIZE) para testes
+    def __init__(self, pasta_docs="./docs", limite_docs=None):
+        self.pasta_docs = pasta_docs
+        self.limite_docs = limite_docs
+        
+        print("Iniciando componentes da Arquitetura Multiagentes...")
         self.parser = Parser()
-        # Lê a configuração de lote; assume 5 como padrão conforme o edital real
-        self.batch_size = int(os.getenv("BATCH_SIZE", 5))
-        self.erros = []
+        self.chunker = Chunker(chunk_size=1000, chunk_overlap=200)
+        
+        # Instanciando os 3 Agentes exigidos pelo Edital
+        self.agente_limpeza = AgenteLimpeza()
+        self.agente_contexto = AgenteContexto()
+        self.agente_indexacao = AgenteIndexacao()
 
-    def processar_lote(self, pasta: str) -> list[Documento]:
-        # Filtra estritamente arquivos PDF, ignorando screenshots ou imagens soltas
-        arquivos = [
-            os.path.join(pasta, f)
-            for f in os.listdir(pasta)
-            if f.lower().endswith(".pdf")
-        ]
+    def executar_pipeline(self):
+        arquivos_pdf = glob.glob(os.path.join(self.pasta_docs, "*.pdf"))
         
-        # Aplica rigorosamente o controle de lote exigido na Tarefa 1
-        arquivos = arquivos[:self.batch_size]
-        documentos = []
-        
-        for caminho in arquivos:
-            doc = self.parser.ler_pdf(caminho)
-            if doc is None:
-                self.erros.append(os.path.basename(caminho))
-                continue
-            documentos.append(doc)
+        # Aplica o limite de lote se configurado (Requisito: Controle de Lote)
+        if self.limite_docs:
+            arquivos_pdf = arquivos_pdf[:self.limite_docs]
             
-        return documentos
+        if not arquivos_pdf:
+            print(f"Nenhum PDF encontrado na pasta {self.pasta_docs}")
+            return
+
+        print(f"Encontrados {len(arquivos_pdf)} documentos. Iniciando a esteira assíncrona...")
+
+        for caminho_pdf in arquivos_pdf:
+            print("\n" + "="*60)
+            print(f"📄 Processando Documento: {os.path.basename(caminho_pdf)}")
+            
+            # --- TAREFA 1: INGESTÃO BRUTA ---
+            documento = self.parser.ler_pdf(caminho_pdf)
+            
+            if not documento or not documento.texto:
+                print(f"⚠️ Aviso: Falha na extração bruta de {os.path.basename(caminho_pdf)}")
+                continue
+                
+            # --- TAREFA 2: PROCESSAMENTO MULTIAGENTES ---
+            print("🔪 Fatiando o documento bruto...")
+            chunks_brutos = self.chunker.fatiar_documento(documento)
+            print(f"   -> Obtidos {len(chunks_brutos)} chunks para processamento.")
+            
+            # O "Corredor Polonês" dos 3 Agentes para CADA chunk
+            for i, chunk_dict in enumerate(chunks_brutos):
+                texto_bruto = chunk_dict["texto"]
+                metadados_iniciais = chunk_dict["metadata"]
+                
+                print(f"\n   [Chunk {i+1}/{len(chunks_brutos)}] Iniciando fluxo de agentes:")
+                
+                # Agente 1: Limpeza
+                texto_limpo = self.agente_limpeza.limpar_chunk(texto_bruto)
+                if not texto_limpo:
+                    continue
+                    
+                # Agente 2: Contexto e Metadados Pydantic
+                metadados_gerados = self.agente_contexto.gerar_metadados(texto_limpo)
+
+                # Exibe os metadados gerados para conferência (opcional)
+                import json
+                print(f"      [JSON Estruturado]: {json.dumps(metadados_gerados, ensure_ascii=False, indent=2)}")
+                
+                # Mescla os metadados gerados pela IA com os metadados de origem (nome do arquivo, index)
+                pacote_metadados = {**metadados_iniciais, **metadados_gerados}
+                
+                # Agente 3: Indexação
+                self.agente_indexacao.indexar_pacote(texto_limpo, pacote_metadados)
+
+        print("\n" + "="*60)
+        print("✅ PIPELINE MULTIAGENTES CONCLUÍDO COM SUCESSO!")
+        print("A Base de Conhecimento Vetorial está pronta.")
+
+if __name__ == "__main__":
+    # Podemos testar passando limite_docs=1 para rodar apenas o primeiro PDF mais rápido
+    orquestrador = Orchestrator(limite_docs=1)
+    orquestrador.executar_pipeline()

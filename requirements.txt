@@ -4,3 +4,8 @@ ollama
 pypdf
 pymupdf
 requests
+langchain
+langchain-community
+langchain-ollama
+langchain-text-splitters
+langchain-chroma
