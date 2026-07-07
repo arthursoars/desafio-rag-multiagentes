@@ -28,11 +28,19 @@ class MetadadosChunk(BaseModel):
         description="Um resumo conciso de no máximo 2 frases sobre o conteúdo do trecho."
     )
     categoria_documento: str = Field(
-        description="Classifique a origem deste texto em uma destas opções: 'Edital', 'Artigo Acadêmico', 'Relatório Financeiro', 'Prova/Avaliação' ou 'Outro'."
+        description=(
+            "Identifique e extraia em até duas palavras a categoria exata deste documento com base no contexto técnico "
+            "(Exemplos comuns: 'Edital', 'Artigo Acadêmico', 'Relatório Financeiro', 'Prova/Avaliação', 'Manual Técnico', 'Contrato Legal'). "
+            "Seja preciso e use termos formais adequados para o tipo de arquivo lido."
+        )
     )
     raciocinio_classificacao: str = Field(
         description="Explique passo a passo o seu raciocínio (Chain of Thought) para decidir se o conteúdo é crítico ou não. Detalhe os motivos."
     )
     eh_conteudo_critico: bool = Field(
         description="Retorne True se o trecho contiver regras, prazos, penalidades ou definições críticas. False caso contrário."
+    )
+    
+    palavras_chave: list[str] = Field(
+        description="Uma lista contendo exatamente 5 palavras-chave ou termos técnicos extraídos deste trecho, ideais para busca."
     )

@@ -4,7 +4,7 @@ from src.ingestion.parser import Parser
 from src.processing.chunker import Chunker
 from src.processing.cleaner import AgenteLimpeza
 from src.processing.contextualizer import AgenteContexto
-from src.vectorstore.chroma_store import AgenteIndexacao
+from src.vectorstore.qdrant_store import AgenteIndexacao
 
 class Orchestrator:
     # O limite de documentos em lote (BATCH_SIZE) para testes

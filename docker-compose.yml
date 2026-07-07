@@ -17,6 +17,17 @@ services:
     networks:
       - rag_network
 
+  # NOVO SERVIÇO: Banco Vetorial Qdrant
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: rag-qdrant
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage # MODIFICADO: Usando volume nomeado para evitar erro de permissão no Windows
+    networks:
+      - rag_network
+
   # Serviço da aplicação Python
   backend:
     build: .
@@ -27,11 +38,13 @@ services:
       - .env
     depends_on:
       - ollama
+      - qdrant # Garante que o backend só suba depois que o Qdrant estiver pronto
     networks:
       - rag_network
 
 volumes:
   ollama_data:
+  qdrant_data: # Declarando o volume do Qdrant aqui embaixo
 
 networks:
   rag_network:
