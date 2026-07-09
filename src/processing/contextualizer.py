@@ -9,7 +9,7 @@ class AgenteContexto:
         """
         Inicializa o Agente de Contexto e Metadados.
         """
-        # Aqui precisamos do ChatOllama pois modelos de Chat lidam melhor com JSON
+        # ChatOllama para melhor serialização de JSON
         self.llm = ChatOllama(
             model=model_name,
             base_url="http://ollama:11434",

@@ -12,7 +12,7 @@ class AgenteIndexacao:
         self.collection_name = collection_name
         self.qdrant_url = "http://qdrant:6333"
         
-        # 1. Cria o cliente para gerenciar a coleção
+        # Inicializa cliente Qdrant
         self.client = QdrantClient(url=self.qdrant_url)
         
         # 2. Se a coleção não existir, cria ela com 1024 dimensões (tamanho do BGE-M3)
@@ -23,7 +23,7 @@ class AgenteIndexacao:
                 vectors_config=models.VectorParams(size=1024, distance=models.Distance.COSINE)
             )
 
-        # 3. Conecta o LangChain ao Qdrant
+        # Integra LangChain com Qdrant
         self.vector_store = QdrantVectorStore(
             client=self.client,
             collection_name=self.collection_name,

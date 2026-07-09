@@ -18,11 +18,11 @@ class MotorBuscaAvancado:
         # 1. Abre a conexão direta com o cliente do Qdrant
         self.client = QdrantClient(url=self.qdrant_url)
         
-        # 2. Resgata o gerador de embeddings BGE-M3 (1024 dimensões)
+        # Carrega gerador de embeddings (BGE-M3)
         gerador = EmbeddingGenerator(model_name="bge-m3")
         self.embedding_function = gerador.obter_gerador()
         
-        # 3. Instancia o Ollama em modo mecânico (temperatura 0) para a técnica de HyDE
+        # Configura LLM em modo determinístico para HyDE
         self.llm = OllamaLLM(
             model=model_llm,
             base_url="http://ollama:11434",

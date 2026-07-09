@@ -17,7 +17,7 @@ class Orchestrator:
         self.parser = Parser()
         self.chunker = Chunker(chunk_size=1000, chunk_overlap=200)
         
-        # Instanciando os 3 Agentes exigidos pelo Desafio
+        # Inicializa agentes multiagentes
         self.agente_limpeza = AgenteLimpeza()
         self.agente_contexto = AgenteContexto()
         self.agente_indexacao = AgenteIndexacao()
