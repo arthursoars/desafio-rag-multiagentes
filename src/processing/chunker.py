@@ -1,4 +1,4 @@
-# Divide o texto em blocos de tamanho fixo, com sobreposição opcional.
+# Chunker - Divide textos em blocos com tamanho fixo e sobreposição para preservar contexto
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from src.ingestion.models import Documento
 

@@ -1,6 +1,7 @@
 from langchain_ollama import OllamaLLM
 from langchain_core.prompts import PromptTemplate
 
+# AgenteLimpeza - Corrige erros de OCR e formatação em textos extraídos de documentos
 class AgenteLimpeza:
     def __init__(self, model_name="qwen2.5vl:3b"):
         self.llm = OllamaLLM(

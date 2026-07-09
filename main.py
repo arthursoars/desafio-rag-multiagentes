@@ -3,6 +3,7 @@ import time
 from dotenv import load_dotenv
 from src.ingestion.orchestrator import Orchestrator
 
+# main - Inicializa o pipeline multiagentes com limite de lote configurável via .env
 # Carrega as variáveis do arquivo .env
 load_dotenv()
 

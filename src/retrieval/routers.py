@@ -1,6 +1,8 @@
 from langchain_ollama import OllamaLLM
 from langchain_core.prompts import PromptTemplate
 
+# RoteadorETratadorConsultas - Valida intenção de consultas e normaliza linguagem informal para formal
+## Pré -processamento de consultas do usuário: Roteamento Semântico + Reescrita de Consulta
 class RoteadorETratadorConsultas:
     def __init__(self, model_name="qwen2.5vl:3b"):
         """

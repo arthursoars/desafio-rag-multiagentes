@@ -3,6 +3,7 @@ from langchain_core.prompts import PromptTemplate
 from src.ingestion.models import MetadadosChunk
 from langchain_core.output_parsers import PydanticOutputParser
 
+# AgenteContexto - Extrai metadados estruturados de chunks usando LLM com validação Pydantic
 class AgenteContexto:
     def __init__(self, model_name="qwen2.5vl:3b"):
         """

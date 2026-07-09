@@ -5,6 +5,7 @@ from pypdf import PdfReader
 from unstructured.partition.pdf import partition_pdf
 from src.ingestion.models import Documento
 
+# Parser - Extrai texto de PDFs combinando OCR digital rápido com visão computacional para imagens
 class Parser:
     def __init__(self):
         # Conecta diretamente ao contêiner do Ollama

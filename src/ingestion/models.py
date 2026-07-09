@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from pydantic import BaseModel, Field
 
-# Modelo de dados para representar o documento lido pelo Parser
+# Documento - Armazena metadados e conteúdo extraído de PDFs
 @dataclass
 class Documento:
     nome: str
@@ -14,8 +14,8 @@ class Documento:
     def caracteres(self) -> int:
         return len(self.texto)
     
+# MetadadosChunk - Valida e estrutura metadados como tema, resumo, categoria e criticalidade de chunks
 # --- NOVAS CLASSES PARA O LANGCHAIN (PYDANTIC) ---
-
 class MetadadosChunk(BaseModel):
     """
     Estrutura obrigatória que o LLM deve preencher para cada chunk.

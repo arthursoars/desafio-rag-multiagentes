@@ -5,6 +5,7 @@ from langchain_qdrant import QdrantVectorStore
 from langchain_ollama import OllamaLLM
 from src.embeddings.embedding_generator import EmbeddingGenerator
 
+# MotorBuscaAvancado - Recupera chunks relevantes usando HyDE e pré-filtros de metadados críticos
 class MotorBuscaAvancado:
     def __init__(self, collection_name="documentos_tecnicos", model_llm="qwen2.5vl:3b"):
         """

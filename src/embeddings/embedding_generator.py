@@ -1,10 +1,11 @@
 from langchain_ollama import OllamaEmbeddings
 
+# EmbeddingGenerator - Gera representações vetoriais de textos usando modelo BGE-M3
 class EmbeddingGenerator:
     def __init__(self, model_name="bge-m3"):
         """
         Inicializa o gerador de embeddings apontando para o nosso contêiner do Ollama.
-        Usando o bge-m3: O melhor modelo open-source atual para português.
+        Usando o bge-m3: melhor modelo open-source atual para português.
         """
         self.embeddings = OllamaEmbeddings(
             model=model_name,
