@@ -1,30 +1,13 @@
 services:
-  # Serviço de inferência local de IA
-  ollama:
-    image: ollama/ollama:latest
-    container_name: rag-ollama
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu] # Usa GPU dedicada para o Ollama
-    networks:
-      - rag_network
-
-  # NOVO SERVIÇO: Banco Vetorial Qdrant
+  # Banco Vetorial Qdrant
   qdrant:
     image: qdrant/qdrant:latest
     container_name: rag-qdrant
     ports:
       - "6333:6333"
     volumes:
-      - qdrant_data:/qdrant/storage # MODIFICADO: Usando volume nomeado para evitar erro de permissão no Windows
+      # Usando volume nomeado para evitar erro de permissão no Windows
+      - qdrant_data:/qdrant/storage
     networks:
       - rag_network
 
@@ -37,14 +20,12 @@ services:
     env_file:
       - .env
     depends_on:
-      - ollama
-      - qdrant # Garante que o backend só suba depois que o Qdrant estiver pronto
+      - qdrant
     networks:
       - rag_network
 
 volumes:
-  ollama_data:
-  qdrant_data: # Declarando o volume do Qdrant aqui embaixo
+  qdrant_data:
 
 networks:
   rag_network:

@@ -7,7 +7,8 @@ from src.embeddings.embedding_generator import EmbeddingGenerator
 # AgenteIndexacao - Armazena chunks vetorizados no Qdrant para recuperação semântica eficiente
 class AgenteIndexacao:
     def __init__(self, collection_name="documentos_tecnicos"):
-        gerador = EmbeddingGenerator(model_name="bge-m3")
+        # ATUALIZADO: Usando o Qwen3 do servidor
+        gerador = EmbeddingGenerator(model_name="qwen3-embedding:0.6b")
         self.embedding_function = gerador.obter_gerador()
         self.collection_name = collection_name
         self.qdrant_url = "http://qdrant:6333"
@@ -15,12 +16,12 @@ class AgenteIndexacao:
         # Inicializa cliente Qdrant
         self.client = QdrantClient(url=self.qdrant_url)
         
-        # 2. Se a coleção não existir, cria ela com 1024 dimensões (tamanho do BGE-M3)
+        # 2. Se a coleção não existir, cria ela com 1536 dimensões (tamanho do Qwen3)
         if not self.client.collection_exists(self.collection_name):
             print(f"   -> [Agente Indexação] Criando nova coleção: {self.collection_name}")
             self.client.create_collection(
                 collection_name=self.collection_name,
-                vectors_config=models.VectorParams(size=1024, distance=models.Distance.COSINE)
+                vectors_config=models.VectorParams(size=1536, distance=models.Distance.COSINE)
             )
 
         # Integra LangChain com Qdrant
@@ -29,6 +30,9 @@ class AgenteIndexacao:
             collection_name=self.collection_name,
             embedding=self.embedding_function
         )
+        
+        # NOVO: Contador para rastrear quantos chunks foram salvos nesta execução
+        self.chunks_salvos_sessao = 0
 
     def indexar_pacote(self, texto_limpo: str, metadados: dict):
         print("   -> [Agente Indexação] Salvando chunk no Qdrant...")
@@ -42,7 +46,9 @@ class AgenteIndexacao:
                 metadatas=[metadados],
                 ids=[id_unico]
             )
-            print(f"      ✅ Chunk {indice_chunk} salvo!")
+            # NOVO: Incrementa o contador e mostra no print
+            self.chunks_salvos_sessao += 1
+            print(f"      ✅ Chunk {indice_chunk} salvo! (Total na sessão: {self.chunks_salvos_sessao})")
         except Exception as e:
             print(f"      ❌ Erro ao salvar: {e}")
 
@@ -66,4 +72,3 @@ class AgenteIndexacao:
         except Exception:
             # Se der qualquer erro (banco fora do ar ou tabela vazia), assume que não existe
             return False
-   

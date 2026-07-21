@@ -1,12 +1,18 @@
+import os
+from dotenv import load_dotenv
 from langchain_ollama import OllamaLLM
 from langchain_core.prompts import PromptTemplate
 
+# Carrega as variáveis de ambiente
+load_dotenv()
+
 # AgenteLimpeza - Corrige erros de OCR e formatação em textos extraídos de documentos
 class AgenteLimpeza:
-    def __init__(self, model_name="qwen2.5vl:3b"):
+    # Atualizado para o modelo 7b
+    def __init__(self, model_name="qwen2.5vl:7b"):
         self.llm = OllamaLLM(
             model=model_name,
-            base_url="http://ollama:11434",
+            base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
             temperature=0.0
         )
         

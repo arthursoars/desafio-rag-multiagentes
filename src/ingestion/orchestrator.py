@@ -12,6 +12,7 @@ class Orchestrator:
     def __init__(self, pasta_docs="./docs", limite_docs=None):
         self.pasta_docs = pasta_docs
         self.limite_docs = limite_docs
+        self.total_pdfs_lidos = 0  # Inicializa o rastreador de PDFs lidos
         
         print("Iniciando componentes da Arquitetura Multiagentes...")
         self.parser = Parser()
@@ -28,6 +29,8 @@ class Orchestrator:
         # Aplica o limite de lote se configurado (Requisito: Controle de Lote)
         if self.limite_docs:
             arquivos_pdf = arquivos_pdf[:self.limite_docs]
+            
+        self.total_pdfs_lidos = len(arquivos_pdf)  # Grava o total exato que será processado
             
         if not arquivos_pdf:
             print(f"Nenhum PDF encontrado na pasta {self.pasta_docs}")
@@ -84,6 +87,7 @@ class Orchestrator:
                 # Agente 3: Indexação
                 self.agente_indexacao.indexar_pacote(texto_limpo, pacote_metadados)
                 
+            print(f"✨ Concluído! Todos os chunks de '{nome_arquivo}' foram salvos com sucesso.\n")        
 
         print("\n" + "="*60)
         print("✅ PIPELINE MULTIAGENTES CONCLUÍDO COM SUCESSO!")
