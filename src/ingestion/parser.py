@@ -38,6 +38,8 @@ class Parser:
             with open(caminho, "rb") as f:
                 total_paginas = len(PdfReader(f).pages)
 
+            print(f"[{os.path.basename(caminho)}] O PDF possui {total_paginas} página(s). Iniciando varredura...")
+
             texto_final = []
 
             # 4. Avalia cada página individualmente

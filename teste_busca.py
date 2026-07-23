@@ -1,76 +1,102 @@
 import sys
 from src.retrieval.routers import RoteadorETratadorConsultas
 from src.retrieval.advanced_search import MotorBuscaAvancado
+from src.generation.generator import AgenteGerador  # Importação da Fase 3
 
-# teste_busca - Testa fluxo completo de RAG: roteamento, reescrita, busca HyDE e filtragem de conteúdo
+# teste_busca - Testa fluxo completo de RAG: roteamento, reescrita, busca HyDE, filtragem e geração
 def executar_teste_rag():
     print("==============================================================")
-    print("      🚀 INICIANDO TESTE INTEGRADO DO MOTOR DE BUSCA (RETRIEVAL)")
+    print("      INICIANDO TESTE INTEGRADO DO MOTOR DE BUSCA (RAG)       ")
     print("==============================================================\n")
 
     # 1. INSTANCIAÇÃO (POO): Criamos os objetos a partir das classes estruturadas
     try:
         tratador = RoteadorETratadorConsultas()
         buscador = MotorBuscaAvancado()
+        gerador = AgenteGerador()  # Instanciando o Gerador de Respostas
     except Exception as e:
-        print(f"❌ [Erro de Inicialização]: Falha ao conectar aos componentes. Verifique o Docker. {e}")
+        print(f"[ERRO FATAL]: Falha ao conectar aos componentes. Verifique o Docker. {e}")
         sys.exit()
 
-    # Sua pergunta original com gírias (vamos testar a resiliência do novo prompt)
-    pergunta_usuario = "Como me inscrevo no edital da UFPB?"
-    print(f"💬 Pergunta Original do Usuário: '{pergunta_usuario}'\n")
+    # Pergunta original do usuário
+    pergunta_usuario = "Quais e quantos editais voce tem conhecimento? e quais as datas criticas que devo ficar atento?"
+    print(f"[PERGUNTA DO USUÁRIO]: '{pergunta_usuario}'\n")
 
     # ----------------------------------------------------------------------
-    # TÉCNICA 1: SEMANTIC ROUTING (ROTEAMENTO SEMÂNTICO com Chain of Thought)
+    # TÉCNICA 1: SEMANTIC ROUTING (ROTEAMENTO SEMÂNTICO)
     # ----------------------------------------------------------------------
-    # O método interno agora vai imprimir o LOG DE TRANSPARÊNCIA exigido pelo edital
     rota = tratador.rotear_consulta(pergunta_usuario)
-    print(f"   ➔ Rota Decidida pelo Filtro: [{rota.upper()}]")
+    print(f"[ROTEAMENTO] Rota decidida: {rota.upper()}")
 
     if rota == "geral":
-        print("   ❌ [Bloqueio de Rota]: Esta pergunta foi considerada fora do escopo documental. Fluxo encerrado.")
+        print("[BLOQUEIO] Pergunta fora do escopo documental. Fluxo encerrado.")
         sys.exit()
-    print("   ✅ [Rota Liberada]: Passagem autorizada! Buscando no acervo de PDFs...\n")
+    print("[ROTEAMENTO] Passagem autorizada. Acessando acervo de PDFs...\n")
 
     # ----------------------------------------------------------------------
     # TÉCNICA 2: QUERY REWRITING (REESCRITA DE CONSULTA)
     # ----------------------------------------------------------------------
     pergunta_formal = tratador.reescrever_consulta(pergunta_usuario)
-    print(f"   ➔ Consulta Formalizada pela IA: '{pergunta_formal}'\n")
+    print(f"[REESCRITA] Consulta formalizada: '{pergunta_formal}'\n")
 
     # ----------------------------------------------------------------------
-    # TÉCNICAS 3 e 4: HyDE e METADATA PRE-FILTERING (DENTRO DO QDRANT)
+    # TÉCNICAS 3 e 4: HyDE e METADATA PRE-FILTERING (NO QDRANT)
     # ----------------------------------------------------------------------
     try:
-        # Puxa os 10 melhores candidatos aplicando o pré-filtro de conteúdo crítico
+        # Puxa os 10 melhores candidatos aplicando o pré-filtro
         pontos_recuperados = buscador.recuperar_chunks_elite(pergunta_formal, top_k=10)
-        print(f"   ➔ Chunks brutos recuperados do Qdrant: {len(pontos_recuperados)} blocos.\n")
+        print(f"[BUSCA VETORIAL] Recuperados {len(pontos_recuperados)} chunks brutos do Qdrant.\n")
     except Exception as e:
-        print(f"   ❌ [Erro no Qdrant]: Falha ao consultar os vetores. {e}")
+        print(f"[ERRO QDRANT]: Falha ao consultar os vetores. {e}")
         sys.exit()
 
     # ----------------------------------------------------------------------
     # TÉCNICA 5: RERANKING (RECLASSIFICAÇÃO DO BGE-M3)
     # ----------------------------------------------------------------------
-    # Compara o contexto profundo dos 10 blocos com a dúvida real e escolhe os 3 campeões
-    chunks_finais = buscador.aplicar_reranking(pergunta_usuario, pontos_recuperados, top_n=3)
+    # Aumentado para top_n=5 conforme planejado para maior contexto
+    chunks_finais = buscador.aplicar_reranking(pergunta_usuario, pontos_recuperados, top_n=5)
+
+    if not chunks_finais:
+        print("\n[AVISO]: Nenhum documento relevante passou pelos filtros de segurança.")
+        sys.exit()
 
     # ----------------------------------------------------------------------
     # EXIBIÇÃO DO RESULTADO COMPILADO (Métricas e Metadados)
     # ----------------------------------------------------------------------
-    print("\n==============================================================")
-    print("        🏆 RESULTADO FINAL: TOP 3 CHUNKS SELECIONADOS")
+    print("==============================================================")
+    print("            CHUNKS SELECIONADOS PARA CONTEXTO                 ")
     print("==============================================================")
     
-    if not chunks_finais:
-        print("\n⚠️ Nenhum documento relevante passou pelos filtros de segurança.")
-    
+    # Preparamos uma lista no formato esperado pelo AgenteGerador
+    textos_para_gerador = []
+
     for i, chunk in enumerate(chunks_finais):
-        print(f"\n🥇 Posição #{i+1} (Score Reclassificado: {chunk['score_relevancia']:.2f})")
-        print(f"📄 Arquivo de Origem: {chunk['metadata'].get('source', 'Desconhecido')}")
-        print(f"🏷️ Categoria: {chunk['metadata'].get('categoria_documento', 'Não identificada')}")
-        print(f"💡 Conteúdo do Fragmento:\n   \"{chunk['texto'].strip()}\"")
-        print("-" * 60)
+        score = chunk.get('score_relevancia', 0)
+        metadata = chunk.get('metadata', {})
+        texto_chunk = chunk.get('texto', '').strip()
+        
+        # Salvando o texto na lista que vai para a LLM
+        textos_para_gerador.append({"conteudo": texto_chunk})
+        
+        print(f"\n[Posição #{i+1}] Score: {score:.2f} | Origem: {metadata.get('source', 'Desconhecido')}")
+        print(f"Trecho: \"{texto_chunk[:150]}...\"") # Imprimindo só o começo para não poluir a tela
+    
+    # ----------------------------------------------------------------------
+    # FASE 3: GERAÇÃO DA RESPOSTA FINAL (LLM)
+    # ----------------------------------------------------------------------
+    print("\n==============================================================")
+    print("            FASE 3: GERAÇÃO DE RESPOSTA (LLM QWEN)            ")
+    print("==============================================================")
+    print("[PROCESSANDO] Lendo os contextos e redigindo resposta humana...\n")
+    
+    resposta_final = gerador.gerar_resposta_final(pergunta_usuario, textos_para_gerador)
+    
+    print("==============================================================")
+    print("                      RESPOSTA DA IA                          ")
+    print("==============================================================")
+    print(f"\n{resposta_final}\n")
+    print("==============================================================")
+
 
 if __name__ == "__main__":
     executar_teste_rag()

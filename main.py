@@ -31,11 +31,21 @@ if __name__ == "__main__":
 
     print("\n" + "=" * 50)
     print("RESUMO DA EXECUÇÃO")
-    print("=" * 50)
+    print("==================================================")
     print(f"Tempo total de execução: {fim - inicio:.2f} segundos")
     print(f"Total de PDFs lidos: {getattr(orq, 'total_pdfs_lidos', 0)}")
-    print("Todos os PDFs da fila foram processados com sucesso!")
     
+    # EXIBE A LISTA DOS ARQUIVOS QUE FALHARAM TOTALMENTE
+    pdfs_falhos = getattr(orq, 'pdfs_com_falha', [])
+    print(f"Total de PDFs com falha: {len(pdfs_falhos)}")
+    if pdfs_falhos:
+        print("Arquivos que falharam na leitura bruta:")
+        for falha in pdfs_falhos:
+            print(f"  ❌ {falha}")
+
+    if len(pdfs_falhos) == 0:
+        print("Todos os PDFs da fila foram processados com sucesso!")
+        
     # Busca a variável lá dentro do agente de indexação para mostrar o resultado
     try:
         total_chunks = orq.agente_indexacao.chunks_salvos_sessao
@@ -43,4 +53,4 @@ if __name__ == "__main__":
     except AttributeError:
         pass # Ignora caso a variável ainda não tenha sido instanciada no orquestrador
         
-    print("=" * 50)
+    print("==================================================")

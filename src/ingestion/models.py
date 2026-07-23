@@ -1,5 +1,22 @@
+import os
+import json
 from dataclasses import dataclass
 from pydantic import BaseModel, Field
+
+# ---------------------------------------------------------
+# LEITURA DAS REGRAS EXTERNAS (Isolamento de Prompts)
+# ---------------------------------------------------------
+caminho_config = os.path.join(os.getcwd(), "config", "prompts_metadados.json")
+try:
+    with open(caminho_config, "r", encoding="utf-8") as arquivo:
+        regras_metadados = json.load(arquivo)
+except FileNotFoundError:
+    print("❌ [ERRO] Arquivo config/prompts_metadados.json não encontrado!")
+    regras_metadados = {} # Fallback: se não achar o arquivo, cria um dicionário vazio para não quebrar o código
+
+# ---------------------------------------------------------
+# CLASSES DE DADOS
+# ---------------------------------------------------------
 
 # Documento - Armazena metadados e conteúdo extraído de PDFs
 @dataclass
@@ -14,33 +31,27 @@ class Documento:
     def caracteres(self) -> int:
         return len(self.texto)
     
-# MetadadosChunk - Valida e estrutura metadados como tema, resumo, categoria e criticalidade de chunks
-# --- NOVAS CLASSES PARA O LANGCHAIN (PYDANTIC) ---
+# MetadadosChunk - Valida e estrutura metadados de chunks
 class MetadadosChunk(BaseModel):
     """
     Estrutura obrigatória que o LLM deve preencher para cada chunk.
-    Preparada para Chain of Thought e Metadata Pre-filtering.
+    As descrições (prompts) são importadas do arquivo de configuração externo.
     """
     tema_principal: str = Field(
-        description="O tema central ou assunto principal deste trecho em até 5 palavras."
+        description=regras_metadados.get("tema_principal", "Tema central do trecho.")
     )
     resumo: str = Field(
-        description="Um resumo conciso de no máximo 2 frases sobre o conteúdo do trecho."
+        description=regras_metadados.get("resumo", "Resumo conciso do trecho.")
     )
     categoria_documento: str = Field(
-        description=(
-            "Identifique e extraia em até duas palavras a categoria exata deste documento com base no contexto técnico "
-            "(Exemplos comuns: 'Edital', 'Artigo Acadêmico', 'Relatório Financeiro', 'Prova/Avaliação', 'Manual Técnico', 'Contrato Legal'). "
-            "Seja preciso e use termos formais adequados para o tipo de arquivo lido."
-        )
+        description=regras_metadados.get("categoria_documento", "Categoria do documento.")
     )
     raciocinio_classificacao: str = Field(
-        description="Explique passo a passo o seu raciocínio (Chain of Thought) para decidir se o conteúdo é crítico ou não. Detalhe os motivos."
+        description=regras_metadados.get("raciocinio_classificacao", "Explicação do raciocínio.")
     )
     eh_conteudo_critico: bool = Field(
-        description="Retorne True se o trecho contiver regras, prazos, penalidades ou definições críticas. False caso contrário."
+        description=regras_metadados.get("eh_conteudo_critico", "True se for crítico, False caso contrário.")
     )
-    
     palavras_chave: list[str] = Field(
-        description="Uma lista contendo exatamente 5 palavras-chave ou termos técnicos extraídos deste trecho, ideais para busca."
+        description=regras_metadados.get("palavras_chave", "Lista de palavras-chave.")
     )
